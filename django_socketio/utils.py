@@ -40,10 +40,20 @@ def broadcast_channel(message, channel):
     broadcast to the channel, including the socket itself.
     """
     try:
-        socket = CLIENTS[CHANNELS.get(channel, [])[0]][1]
-    except (IndexError, KeyError):
+        session_ids = []
+        socket = None
+        for session_id in CHANNELS.get(channel, []):
+            if session_id not in CLIENTS:
+                session_ids.append(session_id)
+                CHANNELS[channel].remove(session_id)
+            else:
+                socket = CLIENTS[session_id][1]
+    except IndexError, KeyError:
         raise NoSocket("There are no clients on the channel: " + channel)
-    socket.send_and_broadcast_channel(message, channel)
+    if socket:
+        socket.send_and_broadcast_channel(message, channel)
+    else:
+        raise NoSocket("There are no sessionids:[{}] on the channel:{} ".format(','.join(session_ids), channel))
 
 
 def format_log(request, message_type, message):

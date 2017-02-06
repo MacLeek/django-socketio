@@ -10,10 +10,7 @@ from django.core.handlers.wsgi import WSGIHandler
 from django.core.management.base import BaseCommand, CommandError
 from django.core.management.commands.runserver import naiveip_re
 from django.utils.autoreload import code_changed, restart_with_reloader
-try:
-    from socketio import SocketIOServer
-except ImportError:
-    from socketio.server import SocketIOServer
+from socketio.server import SocketIOServer
 
 from django_socketio.clients import client_end_all
 from django_socketio.settings import HOST, PORT
@@ -21,13 +18,13 @@ from django_socketio.settings import HOST, PORT
 
 RELOAD = False
 
-def reload_watcher():
-    global RELOAD
-    while True:
-        RELOAD = code_changed()
-        if RELOAD:
-            kill(getpid(), SIGINT)
-        sleep(1)
+# def reload_watcher():
+#     global RELOAD
+#     while True:
+#         RELOAD = code_changed()
+#         if RELOAD:
+#             kill(getpid(), SIGINT)
+#         sleep(1)
 
 class Command(BaseCommand):
 
@@ -50,7 +47,7 @@ class Command(BaseCommand):
         # allowing the port to be set as the client-side default there.
         environ["DJANGO_SOCKETIO_PORT"] = str(self.port)
 
-        start_new_thread(reload_watcher, ())
+        # start_new_thread(reload_watcher, ())
         try:
             bind = (self.addr, int(self.port))
             print
@@ -60,12 +57,12 @@ class Command(BaseCommand):
             server = SocketIOServer(bind, handler, resource="socket.io")
             server.serve_forever()
         except KeyboardInterrupt:
-            client_end_all()
+            # client_end_all()
             if RELOAD:
                 server.kill()
                 print
                 print "Reloading..."
-                restart_with_reloader()
+                # restart_with_reloader()
             else:
                 raise
 
